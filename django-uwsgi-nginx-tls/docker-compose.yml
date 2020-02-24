@@ -1,0 +1,31 @@
+version: '3'
+services:
+
+  web-server:
+    image: webserver
+    ports:
+      - 4433:443
+    env_file:
+      - ./django.env
+    command: ["./run.sh"]
+
+  db:
+    image: postgres
+    env_file:
+      - ./psql.env
+    ports:
+      - 5432:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  db-ui:
+    image: dpage/pgadmin4
+    ports:
+      - 5050:5050
+    env_file:
+      - ./pgadmin.env
+    volumes:
+      - ${PWD}/conf/servers.json:/pgadmin4/servers.json
+
+volumes:
+  db-data:
