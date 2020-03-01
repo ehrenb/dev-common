@@ -1,0 +1,88 @@
+version: "3.3"
+services:
+  ###############################################
+  # RethinkDB
+  ###############################################
+  rethinkdb:
+    image: rethinkdb:2.4.0
+    ports:
+      - 8081:8080
+      - 28015:28015
+      - 29015:29015
+    volumes:
+      - db-data:/data
+    networks:
+      - func_functions
+
+  ###############################################
+  # RethinkDB Changefeeder
+  ###############################################
+  changefeeder:
+    build:
+      context: ./images/changefeeder
+    image: skeleton/changefeeder
+    depends_on:
+      - base
+    env_file:
+    - ./config.env
+    command:
+      bash -c "./wait-for-it.sh $$RMQ_HOST:$$RMQ_PORT -- ./wait-for-it.sh $$RETHINKDB_HOST:$$RETHINKDB_PORT &&
+      python3 run.py"
+    networks:
+      - func_functions
+
+  ###############################################
+  # Ephemeral base img to build
+  ###############################################
+  base:
+    build:
+      context: ./images/base
+    image: skeleton/base:ubuntu
+    command: echo 'done'
+
+  ###############################################
+  # RabbitMQ
+  ###############################################
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 15672:15672
+      - 5672:5672
+    env_file:
+      - ./config.env
+    networks:
+      - func_functions
+
+  ###############################################
+  # RabbitMQ connector into OpenFaaS
+  ###############################################
+  connector:
+    image: templum/rabbitmq-connector:develop
+    environment:
+      OPEN_FAAS_GW_URL: "http://gateway:8080"
+      basic_auth: "true"
+      secret_mount_path: "/run/secrets/"
+    env_file:
+      - ./config.env
+    networks:
+      - func_functions
+      - streaming
+    secrets:
+      - basic-auth-user
+      - basic-auth-password
+
+volumes:
+  db-data:
+
+networks:
+    streaming:
+      driver: overlay
+      attachable: true
+    func_functions:
+      external: true
+
+secrets:
+  basic-auth-user:
+    file: ${PWD}/.auth/user.txt
+  basic-auth-password:
+    file: ${PWD}/.auth/pass.txt
