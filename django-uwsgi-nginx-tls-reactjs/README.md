@@ -30,7 +30,7 @@ Various practical things that should be changed when using in a project:
 * tls crt/key pair
 
 ```bash
-openssl req -nodes -x509 -newkey rsa:4096 -keyout server/conf/tls/tls.key -out server/conf/tls/tls.crt -days 36500
+openssl req -nodes -x509 -newkey rsa:4096 -keyout nginx/conf/tls/tls.key -out nginx/conf/tls/tls.crt -days 36500
 ```
 
 * db name
