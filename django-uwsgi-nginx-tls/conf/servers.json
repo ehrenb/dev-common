@@ -9,4 +9,5 @@
             "SSLMode": "prefer",
             "MaintenanceDB": "postgres"
         }
+    }
 }
